@@ -101,6 +101,16 @@ def create_products():
 #
 # PLACE YOUR CODE TO LIST ALL PRODUCTS HERE
 #
+@app.route("/products", methods=["GET"])
+def list_products():
+    """
+    List all Products
+    """
+    app.logger.info("Request to list all products")
+
+    products = Product.all()
+    serialized = [product.serialize() for product in products]
+    return jsonify(serialized), status.HTTP_200_OK
 
 ######################################################################
 # R E A D   A   P R O D U C T
@@ -118,7 +128,7 @@ def get_products(product_id):
 
     found = Product.find(product_id)
     if not found:
-        abort(status.HTTP_404_NOT_FOUND, f"Product with id {product_id} not found")
+        abort(status.HTTP_404_NOT_FOUND, f"Product with id {product_id} was not found")
     
     serialized = found.serialize()
     return serialized, status.HTTP_200_OK
@@ -130,6 +140,22 @@ def get_products(product_id):
 #
 # PLACE YOUR CODE TO UPDATE A PRODUCT HERE
 #
+@app.route("/products/<int:product_id>", methods=["PUT"])
+def update_products(product_id):
+    """
+    Update a Product
+    This endpoint updates a Product based on the body that is posted
+    """
+    app.logger.info("Request to Update a product with id [%s]", product_id)
+    product = Product.find(product_id)
+    if not product:
+        abort(status.HTTP_404_NOT_FOUND, f"Product with id {product_id} was not found")
+    
+    product.deserialize(request.get_json())
+    product.id = product_id
+    product.update()
+
+    return product.serialize(), status.HTTP_200_OK
 
 ######################################################################
 # D E L E T E   A   P R O D U C T
@@ -139,3 +165,14 @@ def get_products(product_id):
 #
 # PLACE YOUR CODE TO DELETE A PRODUCT HERE
 #
+@app.route("/products/<int:product_id>", methods=["DELETE"])
+def delete_products(product_id):
+    """
+    Deletes an existing Product
+    """
+    product = Product.find(product_id)
+    if product:
+        product.delete()
+    
+    return "", status.HTTP_204_NO_CONTENT
+
