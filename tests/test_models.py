@@ -167,4 +167,31 @@ class TestProductModel(unittest.TestCase):
         # check each of the matched products
         for p in matching_products:
             self.assertEqual(p.name, name_to_match)
+    
+    def test_find_by_availability(self):
+        """ Tt should find products if they are avaialble"""
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+        is_available = products[0].available
+        available_products = [product for product in products if product.available == is_available]
+        available_count = len(available_products)
+        available_from_db = Product.find_by_availability(is_available)
+        self.assertEqual(available_from_db.count(), available_count)
+        for product in available_from_db:
+            self.assertEqual(product.available, is_available)
+    
+    def test_find_by_category(self):
+        """ It should Find products by Category"""
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+        category = products[0].category
+        category_count = len([product for product in products if product.category == category])
+        found = Product.find_by_category(category)
+        self.assertEqual(found.count(), category_count)
+        for product in found:
+            self.assertEqual(product.category, category)
+
+
 
