@@ -111,6 +111,24 @@ class TestProductModel(unittest.TestCase):
         product.create()
         self.assertIsNotNone(product.id)
         found_product = Product.find(product.id)
+        self.assertEqual(found_product.id, product.id)
+        self.assertEqual(found_product.name, product.name)
         self.assertEqual(found_product.name, product.name)
         self.assertEqual(found_product.price, product.price)
         self.assertEqual(found_product.description, product.description)
+    
+    def test_update_a_product(self):
+        """ It should Create and then Update a product"""
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        product.description = "updated product"
+        original_id = product.id
+        product.update()
+        self.assertEqual(product.description, "updated product")
+        self.assertEqual(product.id, original_id)
+        products = Product.all()
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].id, original_id)
+        self.assertEqual(products[0].description, "updated product")
