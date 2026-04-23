@@ -132,3 +132,24 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(len(products), 1)
         self.assertEqual(products[0].id, original_id)
         self.assertEqual(products[0].description, "updated product")
+    
+    def test_delete_a_product(self):
+        """ It should create and then delete a product"""
+        product = ProductFactory()
+        product.create()
+        products = Product.all()
+        self.assertEqual(len(products), 1)
+        product.delete()
+        # make sure there are no products in the db
+        products = Product.all()
+        self.assertEqual(len(products), 0)
+
+    def test_list_all_products(self):
+        """ It should list all products in the database"""
+        # make sure db starts empty
+        products = Product.all()
+        self.assertEqual(len(products), 0)
+        for _ in range(5):
+            ProductFactory().create()
+        products = Product.all()
+        self.assertEqual(len(products), 5)
