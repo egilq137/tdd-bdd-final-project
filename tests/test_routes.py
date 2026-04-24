@@ -28,6 +28,7 @@ import os
 import logging
 from decimal import Decimal
 from unittest import TestCase
+from urllib.parse import quote_plus
 from service import app
 from service.common import status
 from service.models import db, init_db, Product
@@ -209,6 +210,62 @@ class TestProductRoutes(TestCase):
         new_count = self.get_product_count()
         self.assertEqual(new_count, initial_count - 1)
 
+    def test_get_product_list(self):
+        """ It should Get a list of Products"""
+        self._create_products(5)
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 5)
+
+    def test_query_by_name(self):
+        """ IT should Query Products by name"""
+        products = self._create_products(5)
+        test_name = products[0].name
+        matching_products = [product for product in products if product.name == test_name]
+        count = len(matching_products)
+        response = self.client.get(
+            BASE_URL, query_string=f"name={quote_plus(test_name)}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), count)
+        for product in data:
+            self.assertEqual(product["name"], test_name)
+
+    def test_query_by_category(self):
+        """ IT should Query Products by category"""
+        products = self._create_products(5)
+        test_category = products[0].category
+        matching_products = [product for product in products if product.category == test_category]
+        found_count = len(matching_products)
+        logging.debug("Found Products [%d] %s", found_count, matching_products)
+        response = self.client.get(
+            BASE_URL, query_string=f"category={test_category}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), found_count)
+        for product in data:
+            self.assertEqual(product["category"], test_category.name)
+    
+    def test_query_by_availability(self):
+        """ IT should Query Products by availability"""
+        products = self._create_products(10)
+        test_available = products[0].available
+        matching_products = [product for product in products if product.available == test_available]
+        found_count = len(matching_products)
+        logging.debug("Found Products [%d] %s", found_count, matching_products)
+        response = self.client.get(
+            BASE_URL, query_string="available=true"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), found_count)
+        for product in data:
+            self.assertEqual(product["available"], True)
+
+
     ######################################################################
     # Utility functions
     ######################################################################
@@ -218,5 +275,5 @@ class TestProductRoutes(TestCase):
         response = self.client.get(BASE_URL)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
-        # logging.debug("data = %s", data)
+        logging.debug("data = %s", data)
         return len(data)
